@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cutPDF</title>
+  <style>
+    :root {
+      --bg: #f2f4f6;
+      --bg-grad-top: #f7f9fc;
+      --surface: #ffffff;
+      --surface-soft: #fafbfc;
+      --surface-blue: #f5f9ff;
+      --border: #e5e8eb;
+      --border-soft: #eef2f5;
+      --text: #191f28;
+      --text-secondary: #4e5968;
+      --text-tertiary: #8b95a1;
+      --primary: #3182f6;
+      --primary-pressed: #2272eb;
+      --primary-soft: rgba(49, 130, 246, 0.10);
+      --danger: #f04452;
+      --danger-soft: #fff3f4;
+      --success: #13b56e;
+      --success-soft: #edf9f3;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px rgba(15, 23, 42, 0.05);
+      --shadow-button: 0 8px 20px rgba(49, 130, 246, 0.18);
+      --shadow-toast: 0 12px 30px rgba(15, 23, 42, 0.12);
+      --radius-2xl: 28px;
+      --radius-xl: 24px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg) 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      padding: 28px 18px 64px;
+    }
+
+    .container {
+      width: min(1060px, 100%);
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(49, 130, 246, 0.08);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(49, 130, 246, 0.22);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.06;
+      letter-spacing: -0.045em;
+      font-weight: 800;
+      word-break: keep-all;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 780px;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      word-break: keep-all;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.16fr 0.84fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-card);
+    }
+
+    .card-inner {
+      padding: 24px;
+    }
+
+    .dropzone {
+      min-height: 296px;
+      border: 2px dashed #d8e7ff;
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 28px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f6faff 100%);
+      transition: 160ms ease;
+      cursor: pointer;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: #a7cbff;
+      background: linear-gradient(180deg, #f8fbff 0%, #f1f7ff 100%);
+      transform: translateY(-1px);
+    }
+
+    .dropzone input {
+      display: none;
+    }
+
+    .drop-icon {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 16px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: rgba(49, 130, 246, 0.10);
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .drop-title {
+      margin-bottom: 8px;
+      font-size: 24px;
+      line-height: 1.3;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .drop-desc {
+      margin-bottom: 18px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      word-break: keep-all;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      word-break: keep-all;
+    }
+
+    .section-desc {
+      margin: 0 0 18px;
+      color: var(--text-secondary);
+      line-height: 1.72;
+      word-break: keep-all;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(49, 130, 246, 0.08);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meta-item {
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: var(--surface-soft);
+      border: 1px solid var(--border-soft);
+    }
+
+    .meta-label {
+      margin-bottom: 6px;
+      color: var(--text-tertiary);
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      font-size: 17px;
+      line-height: 1.55;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .name-rule-card,
+    .ranges-card {
+      margin-top: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-size: 15px;
+      line-height: 1.4;
+      outline: none;
+      transition: 160ms ease;
+    }
+
+    .field input::placeholder {
+      color: #b0b8c1;
+    }
+
+    .field input:focus {
+      border-color: #92bcff;
+      box-shadow: 0 0 0 4px rgba(49, 130, 246, 0.12);
+    }
+
+    .button-row,
+    .range-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button,
+    .download-link {
+      appearance: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: 160ms ease;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: default;
+      transform: none !important;
+    }
+
+    button.primary {
+      color: white;
+      background: var(--primary);
+      box-shadow: var(--shadow-button);
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--primary-pressed);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #f2f4f6;
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: #eef2f5;
+    }
+
+    button.danger {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border: 1px solid #ffd8dd;
+    }
+
+    .download-link {
+      display: none;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid rgba(49, 130, 246, 0.16);
+    }
+
+    .download-link.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .range-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .range-item {
+      padding: 18px;
+      border-radius: 20px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+    }
+
+    .range-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .range-number-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .range-number {
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .range-subtext {
+      color: var(--text-tertiary);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .range-inputs {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    .range-sep {
+      padding-bottom: 15px;
+      color: var(--text-tertiary);
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .hint {
+      margin-top: 14px;
+      padding: 15px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.72;
+      word-break: keep-all;
+      color: var(--text-secondary);
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--text-tertiary);
+      font-size: 13px;
+      line-height: 1.72;
+      word-break: keep-all;
+    }
+
+    .top-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .soft-box {
+      padding: 14px 16px;
+      margin-top: 16px;
+      border-radius: 18px;
+      background: var(--surface-blue);
+      border: 1px solid #deebff;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: grid;
+      gap: 10px;
+      width: min(92vw, 520px);
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(25, 31, 40, 0.96);
+      color: white;
+      box-shadow: var(--shadow-toast);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 180ms ease, transform 180ms ease;
+      pointer-events: auto;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: rgba(25, 31, 40, 0.96);
+    }
+
+    .toast.error {
+      background: #fff5f5;
+      color: #d92d20;
+      border: 1px solid #ffd6d6;
+    }
+
+    .toast-icon {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .toast.error .toast-icon {
+      background: #ffe1e1;
+    }
+
+    .toast-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toast-title {
+      margin: 0 0 4px;
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .toast-message {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.6;
+      opacity: 0.92;
+      word-break: keep-all;
+    }
+
+    .toast.error .toast-message {
+      opacity: 1;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .range-inputs {
+        grid-template-columns: 1fr;
+      }
+
+      .range-sep {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="brand">
+        <div class="brand-badge">✂</div>
+        <strong>cutPDF</strong>
+      </div>
+      <h1>PDF를 필요한 구간별로 빠르게 나누기</h1>
+      <p class="subtitle">
+        파일을 올리고 페이지 범위만 입력하면 됩니다. 각 구간별 PDF를 개별로 저장할 수 있고,
+        전체 구간은 ZIP 파일 하나로 한 번에 다운로드할 수 있습니다.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-inner">
+          <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="PDF 업로드">
+            <input id="fileInput" type="file" accept="application/pdf" />
+            <div>
+              <div class="drop-icon">PDF</div>
+              <div class="drop-title">PDF 파일 업로드</div>
+              <div class="drop-desc">
+                파일을 여기로 끌어다 놓거나,<br />버튼을 눌러 직접 선택하세요.
+              </div>
+              <button id="openPickerBtn" class="primary" type="button">PDF 선택하기</button>
+            </div>
+          </div>
+
+          <div id="toastWrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
+          <div class="footer-note">
+            캔버스 미리보기에서는 다운로드가 제한될 수 있습니다. 실제 사용은 저장한 HTML 파일을 브라우저에서 열거나
+            로컬 서버로 실행했을 때 가장 안정적입니다.
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div class="card-inner">
+          <div class="top-line">
+            <h2 class="section-title">현재 파일 정보</h2>
+            <span class="chip">로컬 처리</span>
+          </div>
+          <p class="section-desc">불러온 PDF의 이름과 전체 페이지 수를 확인할 수 있습니다.</p>
+
+          <div class="meta-grid">
+            <div class="meta-item">
+              <div class="meta-label">파일 이름</div>
+              <div id="fileName" class="meta-value">아직 선택된 파일 없음</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">총 페이지 수</div>
+              <div id="pageCount" class="meta-value">-</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">파일명 미리보기</div>
+              <div id="namePreview" class="meta-value" style="font-size:15px; line-height:1.7; color:var(--text-secondary);">
+                예: 자바책_1~3.pdf
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card name-rule-card">
+      <div class="card-inner">
+        <h2 class="section-title">부분 PDF 이름 설정</h2>
+        <p class="section-desc">
+          기본 이름을 입력하면 모든 부분 PDF에 같은 규칙이 적용됩니다.
+          예를 들어 자바책을 입력하면 자바책_1~3.pdf, 자바책_4~8.pdf처럼 저장됩니다.
+        </p>
+
+        <div class="field" style="max-width: 560px;">
+          <label for="baseNameInput">기본 파일 이름</label>
+          <input id="baseNameInput" type="text" placeholder="예: 자바책" />
+        </div>
+
+        <div class="soft-box">
+          전체 다운로드를 누르면 입력된 모든 유효 구간을 모아 ZIP 파일 한 개로 다운로드합니다.
+        </div>
+      </div>
+    </section>
+
+    <section class="card ranges-card">
+      <div class="card-inner">
+        <h2 class="section-title">부분 PDF 설정</h2>
+        <p class="section-desc">
+          각 구간의 시작 페이지와 끝 페이지를 입력한 뒤 파일을 생성하세요.
+          필요한 만큼 구간을 추가할 수 있고, 전체 다운로드 버튼으로 ZIP 파일 하나를 만들 수 있습니다.
+        </p>
+
+        <div class="button-row">
+          <button id="addRangeBtn" class="secondary" type="button">부분 PDF 추가하기</button>
+          <button id="downloadAllBtn" class="primary" type="button">부분 PDF 전체 ZIP 다운로드</button>
+        </div>
+
+        <div id="rangeList" class="range-list"></div>
+
+        <div class="hint">
+          페이지 번호는 1부터 시작합니다. 예를 들어 10페이지 PDF에서 4와 6을 입력하면 4, 5, 6페이지가 포함된 새 PDF가 생성됩니다.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
+    import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const openPickerBtn = document.getElementById('openPickerBtn');
+    const addRangeBtn = document.getElementById('addRangeBtn');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const rangeList = document.getElementById('rangeList');
+    const fileNameEl = document.getElementById('fileName');
+    const pageCountEl = document.getElementById('pageCount');
+    const toastWrap = document.getElementById('toastWrap');
+    const baseNameInput = document.getElementById('baseNameInput');
+    const namePreview = document.getElementById('namePreview');
+
+    let sourceFile = null;
+    let sourcePdfDoc = null;
+    let totalPages = 0;
+    let rangeId = 0;
+
+    function showToast(type, title, message) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icon = type === 'error' ? '!' : '✓';
+      toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-body">
+          <p class="toast-title">${title}</p>
+          <p class="toast-message">${message}</p>
+        </div>
+      `;
+
+      toastWrap.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 180);
+      }, 2600);
+    }
+
+    function showStatus(message) {
+      showToast('success', '완료', message);
+    }
+
+    function hideStatus() {}
+
+    function showError(message) {
+      showToast('error', '확인해주세요', message);
+    }
+
+    function hideError() {}
+
+    function sanitizeFileName(name) {
+      return name.replace(/[\\/:*?"<>|]/g, '_').trim();
+    }
+
+    function getBaseOutputName() {
+      const customName = sanitizeFileName(baseNameInput.value || '');
+      if (customName) return customName;
+      if (sourceFile?.name) return sanitizeFileName(sourceFile.name.replace(/\.pdf$/i, ''));
+      return 'cutPDF';
+    }
+
+    function makeOutputFileName(startPage, endPage) {
+      return `${getBaseOutputName()}_${startPage}~${endPage}.pdf`;
+    }
+
+    function makeZipFileName() {
+      return `${getBaseOutputName()}_parts.zip`;
+    }
+
+    function updateNamePreview() {
+      namePreview.textContent = makeOutputFileName(1, 3);
+    }
+
+    function ensurePdfLoaded() {
+      if (!sourcePdfDoc || !sourceFile) {
+        throw new Error('먼저 PDF 파일을 업로드해주세요.');
+      }
+    }
+
+    function parseRangeValues(item, currentId) {
+      const startInput = item.querySelector('.start-page-input');
+      const endInput = item.querySelector('.end-page-input');
+      const startPage = Number(startInput.value);
+      const endPage = Number(endInput.value);
+
+      if (!Number.isInteger(startPage) || !Number.isInteger(endPage)) {
+        throw new Error(`부분 PDF ${currentId}: 시작 페이지와 끝 페이지를 모두 숫자로 입력해주세요.`);
+      }
+      if (startPage < 1 || endPage < 1) {
+        throw new Error(`부분 PDF ${currentId}: 페이지 번호는 1 이상이어야 합니다.`);
+      }
+      if (startPage > endPage) {
+        throw new Error(`부분 PDF ${currentId}: 시작 페이지는 끝 페이지보다 클 수 없습니다.`);
+      }
+      if (endPage > totalPages) {
+        throw new Error(`부분 PDF ${currentId}: 끝 페이지가 전체 페이지 수(${totalPages})를 초과했습니다.`);
+      }
+
+      return { startPage, endPage };
+    }
+
+    async function buildSplitPdf(startPage, endPage) {
+      ensurePdfLoaded();
+
+      const newPdf = await PDFDocument.create();
+      const pageIndices = [];
+      for (let i = startPage - 1; i <= endPage - 1; i += 1) {
+        pageIndices.push(i);
+      }
+
+      const copiedPages = await newPdf.copyPages(sourcePdfDoc, pageIndices);
+      copiedPages.forEach((page) => newPdf.addPage(page));
+
+      const pdfBytes = await newPdf.save();
+      const objectUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
+
+      return {
+        pdfBytes,
+        objectUrl,
+        fileName: makeOutputFileName(startPage, endPage),
+      };
+    }
+
+    function triggerDownload(url, fileName) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function createRangeItem() {
+      rangeId += 1;
+      const currentId = rangeId;
+
+      const item = document.createElement('div');
+      item.className = 'range-item';
+      item.dataset.rangeId = String(currentId);
+
+      item.innerHTML = `
+        <div class="range-item-top">
+          <div class="range-number-wrap">
+            <div class="range-number">부분 PDF ${currentId}</div>
+            <div class="range-subtext">페이지 범위를 입력해서 새 PDF를 만드세요</div>
+          </div>
+          <button class="danger remove-range-btn" type="button">삭제</button>
+        </div>
+
+        <div class="range-inputs">
+          <div class="field">
+            <label for="start-${currentId}">시작 페이지</label>
+            <input id="start-${currentId}" class="start-page-input" type="number" min="1" step="1" placeholder="예: 1" />
+          </div>
+          <div class="range-sep">~</div>
+          <div class="field">
+            <label for="end-${currentId}">끝 페이지</label>
+            <input id="end-${currentId}" class="end-page-input" type="number" min="1" step="1" placeholder="예: 3" />
+          </div>
+        </div>
+
+        <div class="range-actions">
+          <button class="primary generate-btn" type="button">부분 PDF 만들기</button>
+          <a class="download-link" download>다운로드</a>
+        </div>
+      `;
+
+      const removeBtn = item.querySelector('.remove-range-btn');
+      const generateBtn = item.querySelector('.generate-btn');
+      const downloadLink = item.querySelector('.download-link');
+
+      removeBtn.addEventListener('click', () => {
+        if (downloadLink.dataset.objectUrl) {
+          URL.revokeObjectURL(downloadLink.dataset.objectUrl);
+        }
+        item.remove();
+      });
+
+      generateBtn.addEventListener('click', async () => {
+        hideError();
+        hideStatus();
+
+        try {
+          ensurePdfLoaded();
+          const { startPage, endPage } = parseRangeValues(item, currentId);
+
+          generateBtn.disabled = true;
+          generateBtn.textContent = '생성 중...';
+
+          const result = await buildSplitPdf(startPage, endPage);
+
+          if (downloadLink.dataset.objectUrl) {
+            URL.revokeObjectURL(downloadLink.dataset.objectUrl);
+          }
+
+          downloadLink.href = result.objectUrl;
+          downloadLink.download = result.fileName;
+          downloadLink.dataset.objectUrl = result.objectUrl;
+          downloadLink.classList.add('visible');
+          downloadLink.textContent = `${result.fileName} 다운로드`;
+
+          showStatus(`부분 PDF ${currentId}가 준비되었습니다. 다운로드 버튼을 눌러 저장하세요.`);
+        } catch (error) {
+          showError(error instanceof Error ? error.message : '부분 PDF 생성 중 오류가 발생했습니다.');
+        } finally {
+          generateBtn.disabled = false;
+          generateBtn.textContent = '부분 PDF 만들기';
+        }
+      });
+
+      rangeList.appendChild(item);
+    }
+
+    function resetRanges() {
+      const links = rangeList.querySelectorAll('.download-link');
+      links.forEach((link) => {
+        if (link.dataset.objectUrl) {
+          URL.revokeObjectURL(link.dataset.objectUrl);
+        }
+      });
+      rangeList.innerHTML = '';
+      rangeId = 0;
+      createRangeItem();
+    }
+
+    async function loadPdfFile(file) {
+      hideError();
+      hideStatus();
+
+      if (!file) return;
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        showError('PDF 파일만 업로드할 수 있습니다.');
+        return;
+      }
+
+      try {
+        showStatus('PDF를 불러오는 중입니다...');
+        const bytes = await file.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(bytes);
+
+        sourceFile = file;
+        sourcePdfDoc = pdfDoc;
+        totalPages = pdfDoc.getPageCount();
+
+        fileNameEl.textContent = file.name;
+        pageCountEl.textContent = String(totalPages);
+        if (!baseNameInput.value.trim()) {
+          baseNameInput.value = sanitizeFileName(file.name.replace(/\.pdf$/i, ''));
+        }
+        updateNamePreview();
+        resetRanges();
+
+        showStatus(`업로드 완료: 총 ${totalPages}페이지 PDF입니다. 아래에서 원하는 구간을 입력하세요.`);
+      } catch (error) {
+        sourceFile = null;
+        sourcePdfDoc = null;
+        totalPages = 0;
+        fileNameEl.textContent = '아직 선택된 파일 없음';
+        pageCountEl.textContent = '-';
+        rangeList.innerHTML = '';
+        rangeId = 0;
+        showError('PDF 파일을 읽는 중 문제가 발생했습니다. 손상된 파일인지 확인해주세요.');
+      }
+    }
+
+    openPickerBtn.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('click', (event) => {
+      if (event.target === openPickerBtn) return;
+      fileInput.click();
+    });
+
+    dropzone.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      await loadPdfFile(file);
+      fileInput.value = '';
+    });
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', async (event) => {
+      const file = event.dataTransfer?.files?.[0];
+      await loadPdfFile(file);
+    });
+
+    addRangeBtn.addEventListener('click', () => {
+      createRangeItem();
+      hideError();
+      hideStatus();
+    });
+
+    downloadAllBtn.addEventListener('click', async () => {
+      hideError();
+      hideStatus();
+
+      try {
+        ensurePdfLoaded();
+        const items = [...rangeList.querySelectorAll('.range-item')];
+        if (!items.length) {
+          throw new Error('다운로드할 부분 PDF 구간이 없습니다.');
+        }
+
+        downloadAllBtn.disabled = true;
+        downloadAllBtn.textContent = 'ZIP 생성 중...';
+
+        const zip = new JSZip();
+
+        for (const item of items) {
+          const currentId = Number(item.dataset.rangeId);
+          const { startPage, endPage } = parseRangeValues(item, currentId);
+          const result = await buildSplitPdf(startPage, endPage);
+
+          zip.file(result.fileName, result.pdfBytes);
+
+          const downloadLink = item.querySelector('.download-link');
+          if (downloadLink.dataset.objectUrl) {
+            URL.revokeObjectURL(downloadLink.dataset.objectUrl);
+          }
+          downloadLink.href = result.objectUrl;
+          downloadLink.download = result.fileName;
+          downloadLink.dataset.objectUrl = result.objectUrl;
+          downloadLink.classList.add('visible');
+          downloadLink.textContent = `${result.fileName} 다운로드`;
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const zipUrl = URL.createObjectURL(zipBlob);
+        triggerDownload(zipUrl, makeZipFileName());
+        setTimeout(() => URL.revokeObjectURL(zipUrl), 3000);
+
+        showStatus('전체 구간을 ZIP 파일 하나로 다운로드했습니다.');
+      } catch (error) {
+        showError(error instanceof Error ? error.message : '전체 ZIP 다운로드 중 오류가 발생했습니다.');
+      } finally {
+        downloadAllBtn.disabled = false;
+        downloadAllBtn.textContent = '부분 PDF 전체 ZIP 다운로드';
+      }
+    });
+
+    baseNameInput.addEventListener('input', () => {
+      baseNameInput.value = baseNameInput.value.replace(/[\\/:*?"<>|]/g, '_');
+      updateNamePreview();
+
+      const items = [...rangeList.querySelectorAll('.range-item')];
+      for (const item of items) {
+        const downloadLink = item.querySelector('.download-link');
+        if (!downloadLink.classList.contains('visible')) continue;
+
+        const currentId = Number(item.dataset.rangeId);
+        try {
+          const { startPage, endPage } = parseRangeValues(item, currentId);
+          const newFileName = makeOutputFileName(startPage, endPage);
+          downloadLink.download = newFileName;
+          downloadLink.textContent = `${newFileName} 다운로드`;
+        } catch {
+        }
+      }
+    });
+
+    updateNamePreview();
+    createRangeItem();
+  </script>
+</body>
+</html>
